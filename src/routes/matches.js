@@ -1,13 +1,31 @@
 import { Router } from "express";
-import { createMatchSchema } from "../validation/matches";
+import {
+  createMatchSchema,
+  listMatchesQuerySchema,
+} from "../validation/matches.js";
 import { db } from "../db/db.js";
 import { matches } from "../db/schema.js";
-import { getMatchStatus } from "../../utils/match-status";
+import { getMatchStatus } from "../../utils/match-status.js";
 
 export const matchRouter = Router();
 
 matchRouter.get("/", (req, res, next) => {
-  res.status(200).json({ message: "Matches List" });
+  const parsed = listMatchesQuerySchema.safeParse(req.query);
+
+  if (!parsed.success) {
+    return res
+      .status(400)
+      .json({ error: "Invalid query", details: JSON.stringify(parsed.error) });
+  }
+
+  const { limit = 1 } = parsed.data;
+
+  db.select()
+    .from(matches)
+    .limit(limit)
+    .then((data) => {
+      res.status(200).json({ data });
+    });
 });
 
 matchRouter.post("/", async (req, res, next) => {
