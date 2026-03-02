@@ -6,10 +6,13 @@ import {
 import { db } from "../db/db.js";
 import { matches } from "../db/schema.js";
 import { getMatchStatus } from "../../utils/match-status.js";
+import { desc } from "drizzle-orm";
 
 export const matchRouter = Router();
 
-matchRouter.get("/", (req, res, next) => {
+const MAX_LIMIT = 100;
+
+matchRouter.get("/", async (req, res, next) => {
   const parsed = listMatchesQuerySchema.safeParse(req.query);
 
   if (!parsed.success) {
@@ -18,14 +21,19 @@ matchRouter.get("/", (req, res, next) => {
       .json({ error: "Invalid query", details: JSON.stringify(parsed.error) });
   }
 
-  const { limit = 1 } = parsed.data;
+  const limit = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
 
-  db.select()
-    .from(matches)
-    .limit(limit)
-    .then((data) => {
-      res.status(200).json({ data });
-    });
+  try {
+    const data = await db
+      .select()
+      .from(matches)
+      .orderBy(desc(matches.createdAt))
+      .limit(limit);
+
+    res.json({ data });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to list matches," });
+  }
 });
 
 matchRouter.post("/", async (req, res, next) => {
