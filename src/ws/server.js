@@ -24,12 +24,29 @@ export function attachWebSocketServer(server) {
   });
 
   wss.on("connection", (socket) => {
+    socket.isAlive = true;
+
+    socket.on("pong", () => {
+      socket.isAlive = true; // Mark connection as alive on pong
+    });
+
     sendJson(socket, { type: "welcome" });
 
-    socket.on("error", (error) => {
-      console.error("WebSocket error:", error);
-    });
+    socket.on("error", console.error);
   });
+
+  const interval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+      if (ws.isAlive === false) {
+        return ws.terminate(); // Terminate dead connections
+      }
+
+      ws.isAlive = false; // Mark connection as potentially dead
+      ws.ping(); // Send ping to check if connection is alive
+    });
+  }, 30000); // Check every 30 seconds
+
+  wss.on("close", () => clearInterval(interval)); // Clean up interval on server close
 
   function broadcastMatchCreated(match) {
     broadcast(wss, { type: "match_created", data: match });
