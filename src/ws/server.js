@@ -10,7 +10,7 @@ function broadcast(wss, payload) {
   const message = JSON.stringify(payload);
 
   for (const client of wss.clients) {
-    if (client.readyState !== WebSocket.OPEN) return;
+    if (client.readyState !== WebSocket.OPEN) continue;
 
     client.send(message);
   }
