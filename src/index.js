@@ -2,6 +2,7 @@ import express from "express";
 import { matchRouter } from "./routes/matches.js";
 import http from "http";
 import { attachWebSocketServer } from "./ws/server.js";
+import { securityMiddleware } from "./arcjet.js";
 
 const app = express();
 
@@ -15,6 +16,8 @@ app.use(express.json()); // Middleware to parse JSON bodies
 app.get("/", (req, res) => {
   res.send("Hello from express server!");
 });
+
+app.use(securityMiddleware()); // Apply Arcjet security middleware to all routes
 
 app.use("/matches", matchRouter);
 
