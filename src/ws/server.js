@@ -30,16 +30,18 @@ export function attachWebSocketServer(server) {
         const decision = await wsArcjet.protect(req);
 
         if (decision.isDenied()) {
-          const code = decision.reason.isRateLimit() ? 1013 : 1008; // 1013: Try Again Later, 1008: Policy Violation
-          const reason = decision.reason.isRateLimit()
-            ? "Rate limit exceeded"
-            : "Access denied";
-
-          socket.close(code, reason);
+          if (decision.reason.isRateLimit()) {
+            socket.write("HTTP/1.1 429 Too Many Requests\r\n\r\n");
+          } else {
+            socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+          }
+          socket.destroy();
+          return;
         }
-      } catch (error) {
-        console.error("Arcjet WebSocket protection error: ", error);
-        socket.close(code, reason);
+      } catch (e) {
+        console.error("WS upgrade protection error", e);
+        socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+        socket.destroy();
         return;
       }
     }
