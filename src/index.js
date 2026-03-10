@@ -3,6 +3,7 @@ import { matchRouter } from "./routes/matches.js";
 import http from "http";
 import { attachWebSocketServer } from "./ws/server.js";
 import { securityMiddleware } from "./arcjet.js";
+import { commentaryRouter } from "./routes/commentaryRouter.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 app.use(securityMiddleware()); // Apply Arcjet security middleware to all routes
 
 app.use("/matches", matchRouter);
+app.use("/matches/:id/commentary", commentaryRouter); // Add commentary routes under matches
 
 const { broadcastMatchCreated } = attachWebSocketServer(server); // Attach WebSocket server to the HTTP server
 
