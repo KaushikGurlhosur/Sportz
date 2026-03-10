@@ -31,6 +31,7 @@ export function attachWebSocketServer(server) {
 
         if (decision.isDenied()) {
           if (decision.reason.isRateLimit()) {
+            // Inform client of rate limit before closing
             socket.write("HTTP/1.1 429 Too Many Requests\r\n\r\n");
           } else {
             socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
@@ -40,8 +41,8 @@ export function attachWebSocketServer(server) {
         }
       } catch (e) {
         console.error("WS upgrade protection error", e);
-        socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
-        socket.destroy();
+        socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n"); // Inform client of server error before closing
+        socket.destroy(); // Terminate connection on error
         return;
       }
     }
