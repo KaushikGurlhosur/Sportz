@@ -23,9 +23,11 @@ app.use(securityMiddleware()); // Apply Arcjet security middleware to all routes
 app.use("/matches", matchRouter);
 app.use("/matches/:id/commentary", commentaryRouter); // Add commentary routes under matches
 
-const { broadcastMatchCreated } = attachWebSocketServer(server); // Attach WebSocket server to the HTTP server
+const { broadcastMatchCreated, broadcastCommentary } =
+  attachWebSocketServer(server); // Attach WebSocket server to the HTTP server
 
 app.locals.broadcastMatchCreated = broadcastMatchCreated; // Make the broadcast function available in route handlers
+app.locals.broadcastCommentary = broadcastCommentary; // Make the broadcast function available in route handlers
 
 server.listen(PORT, HOST, () => {
   const baseUrl =
